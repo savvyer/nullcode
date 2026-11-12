@@ -180,10 +180,7 @@ export function apply(ctx) {
     manifest.dependencies = { ...manifest.dependencies, [pluginName]: `file:${plugin}` }
     manifest.dsh.profile.bundles.push(pluginName)
     writeFileSync(join(profile, 'package.json'), JSON.stringify(manifest))
-    // nullcode (PATCHES.md P11): hosted CI Macs need more than office-kit's 60 s for a cold LibreOffice start
-    // (kept below the 120 s request limit); a patch replaces the whole row config, so outputDirectory is restated.
-    writeFileSync(join(profile, 'cordis.patch.yml'), '- id: webserver\n  config:\n    host: 127.0.0.1\n    port: 0\n'
-      + '- id: office-kit\n  config:\n    outputDirectory: !!js dshHomePath(\'office-kit\', \'outputs\')\n    timeoutMs: 110000\n')
+    writeFileSync(join(profile, 'cordis.patch.yml'), '- id: webserver\n  config:\n    host: 127.0.0.1\n    port: 0\n')
     const ready = await Promise.race([host.start(), new Promise<never>((_, reject) => {
       timer = setTimeout(() => { reject(new Error('desktop runtime: Host readiness exceeded 120 seconds')) }, 120_000)
     })])

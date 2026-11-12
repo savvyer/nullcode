@@ -6,7 +6,7 @@ history and merges `upstream/master` regularly. Differences:
 - **No telemetry or phone-home** apart from the LLM provider you select: OTel, product analytics, feedback upload,
   session-log/plugin-inventory request extensions, DeepSeek account/Platform login and the npm registry probe are
   off (`overlay/nullcode.patch.yml`); no identity headers on DeepSeek API calls; no mandatory-update policy.
-- **Own unsigned Desktop builds** for macOS arm64/x64 and Windows x64 from GitHub Actions → GitHub Releases.
+- **Own unsigned Desktop builds** for macOS Apple Silicon (arm64) and Windows x64 from GitHub Actions → GitHub Releases.
   Windows auto-updates from the Releases; macOS updates manually.
 - **Providers**: configure in Settings → Models, e.g. OpenCode Go (`OPENCODE_API_KEY`, via the built-in pi-ai
   catalog) or DeepSeek by API key.

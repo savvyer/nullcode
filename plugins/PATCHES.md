@@ -17,7 +17,6 @@ so `git grep -n "PATCHES.md P"` lists them. On a sync conflict, re-apply the **i
 | P8 | `apps/cli/package.json`, root `package.json`, `pnpm-lock.yaml` | removed `@deepseek-ai/dsh-cua-bundle` dependency | Computer use is not shipped. `OPTIONAL_BUNDLES` is untouched; the package stays in the workspace (deps reduction: `plugins/DEPS.md`). |
 | P9 | `apps/desktop/src/welcome-api.ts` (`needsWelcome` → `false`), `apps/desktop/src/welcome-backend.ts` (inert signed-out account backend instead of `desktopAccountBackend`) | no DeepSeek sign-in welcome | The account rows are disabled by the overlay; the shell's account is inert at its one construction site (no account RPCs, no account WebSocket that would reconnect every second, sign-in rejects). The workspace opens directly; providers are set in Settings → Models. |
 | P10 | `pnpm-workspace.yaml` | `minimumReleaseAge: 10080` | Newly resolved versions must be ≥ 7 days old. Upstream's `minimumReleaseAgeExclude` list stays as is. |
-| P11 | `apps/desktop/scripts/smoke-runtime.ts` (smoke profile patch) | office-kit `timeoutMs: 110000` for the packaged-runtime smoke only | GitHub-hosted Macs (Intel and Rosetta) exceed the 60 s default on LibreOffice's cold first conversion; the shipped app keeps upstream's default. |
 
 ## Not patched on purpose
 - `apps/desktop/src/main.ts` mandatory-update logic: skipped automatically when the manifest has no policy (P4).

@@ -1,6 +1,6 @@
 name: nullcode Desktop
 
-# Unsigned Desktop installers for macOS arm64/x64 and Windows x64.
+# Unsigned Desktop installers for macOS Apple Silicon (arm64) and Windows x64.
 # workflow_dispatch → build artifacts only; tag v* → also a GitHub Release
 # (Windows auto-updates from releases/latest/download/nightly.yml; macOS updates manually).
 
@@ -26,8 +26,6 @@ jobs:
       matrix:
         include:
           - { target: mac-arm64, runner: macos-latest, script: 'package:desktop:mac:arm64:unsigned' }
-          # Native Intel: the packaged-runtime smoke (LibreOffice conversion) times out under Rosetta on ARM runners.
-          - { target: mac-x64, runner: macos-15-intel, script: 'package:desktop:mac:x64:unsigned' }
           - { target: win-x64, runner: windows-latest, script: 'package:desktop:win:x64:unsigned' }
     name: package ${{ matrix.target }}
     runs-on: ${{ matrix.runner }}
