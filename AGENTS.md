@@ -190,4 +190,4 @@ Docs accompany every code change: update affected README and JSDoc contracts tog
 
 ## nullcode fork
 
-This checkout is the nullcode fork. Never run pnpm, npm, project code, builds, or tests on the host: use `plugins/dev/run.sh <command>`, a Docker container with this checkout bind-mounted. Register every upstream-file edit in [plugins/PATCHES.md](plugins/PATCHES.md); merge upstream with [upstream-sync](.agents/skills/upstream-sync/SKILL.md).
+This checkout is the nullcode fork. On a developer machine never run pnpm, npm, project code, builds, or tests directly: use `plugins/dev/run.sh <command>`, a Docker container with this checkout bind-mounted (CI runners run them directly). Register every upstream-file edit in [plugins/PATCHES.md](plugins/PATCHES.md); merge upstream with [upstream-sync](.agents/skills/upstream-sync/SKILL.md).

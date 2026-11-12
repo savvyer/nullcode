@@ -8,7 +8,10 @@ removed=0
 keep_out() {
   case "$1" in
     .github/workflows/fork-*) if [ "$2" = conflict ]; then git checkout --ours -- "$1"; git add -- "$1"; echo "sync-cleanup: kept ours $1"; fi ;;
-    .github/workflows/*|.github/dependabot.yml) git rm -q -f --ignore-unmatch -- "$1"; removed=$((removed + 1)); echo "sync-cleanup: removed upstream $1" ;;
+    .github/workflows/*|.github/dependabot.yml)
+      if git ls-files --error-unmatch -- "$1" >/dev/null 2>&1; then
+        git rm -q -f -- "$1"; removed=$((removed + 1)); echo "sync-cleanup: removed upstream $1"
+      fi ;;
   esac
 }
 while IFS= read -r path; do keep_out "$path" conflict; done < <(git diff --name-only --diff-filter=U)

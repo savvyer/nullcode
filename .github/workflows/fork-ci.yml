@@ -40,6 +40,9 @@ jobs:
         run: |
           node --import tsx/esm scripts/verify-doc-budgets.ts
           node --import tsx/esm scripts/verify-translation-pairing.ts
+      # Fork commits come from a host checkout without lefthook, so upstream's pre-commit lint runs here instead.
+      - name: Lint
+        run: pnpm run lint
       - name: Typecheck
         run: pnpm run typecheck
       - name: Unit tests of patched packages (minus plugins/test-divergence.json)

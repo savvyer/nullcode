@@ -33,6 +33,7 @@ plugins/dev/run.sh pnpm install --frozen-lockfile --ignore-scripts
 plugins/dev/run.sh node --import tsx/esm plugins/scripts/guard-telemetry.ts
 plugins/dev/run.sh node --import tsx/esm plugins/scripts/run-fork-tests.ts
 plugins/dev/run.sh pnpm run typecheck
+plugins/dev/run.sh pnpm run lint          # before committing: host commits run no lefthook hooks
 ```
 Host side: only git, gh and docker. Do not install git hooks (lefthook) from `node_modules` on the host;
 `--ignore-scripts` keeps them out. Desktop installers are built only by `fork-desktop.yml`.
