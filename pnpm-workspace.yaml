@@ -54,6 +54,9 @@ allowBuilds:
   # Store-index rewriting only needs msgpackr's portable JavaScript codec.
   msgpackr-extract: false
 
+# nullcode (PATCHES.md P10): explicit 7-day release-age floor for newly resolved versions.
+minimumReleaseAge: 10080
+
 minimumReleaseAgeExclude:
   # Native Codex and Claude tests qualify this exact release with its local patches.
   - '@botiverse/oar@0.67.0'
