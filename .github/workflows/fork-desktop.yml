@@ -26,7 +26,8 @@ jobs:
       matrix:
         include:
           - { target: mac-arm64, runner: macos-latest, script: 'package:desktop:mac:arm64:unsigned' }
-          - { target: mac-x64, runner: macos-latest, script: 'package:desktop:mac:x64:unsigned' }
+          # Native Intel: the packaged-runtime smoke (LibreOffice conversion) times out under Rosetta on ARM runners.
+          - { target: mac-x64, runner: macos-15-intel, script: 'package:desktop:mac:x64:unsigned' }
           - { target: win-x64, runner: windows-latest, script: 'package:desktop:win:x64:unsigned' }
     name: package ${{ matrix.target }}
     runs-on: ${{ matrix.runner }}
