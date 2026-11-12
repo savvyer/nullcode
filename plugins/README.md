@@ -15,14 +15,27 @@ history and merges `upstream/master` regularly. Differences:
 | Path | What |
 |---|---|
 | `overlay/nullcode.patch.yml` | Cordis overlay applied after all bundle/user layers (desktop always; web/CLI with `--patch`). |
-| `PATCHES.md` | Register of every edit to upstream files (P0–P10). |
+| `PATCHES.md` | Register of every edit to upstream files (P0–P11). |
 | `UPSTREAM.md` | Sync log (upstream SHA → date → result). |
 | `DEPS.md`, `deps-allowlist.json` | Dependency report and frozen lockfile allowlist. |
 | `test-divergence.json` | Upstream tests that assert behaviour nullcode changes on purpose. |
 | `scripts/` | `guard-telemetry.ts`, `check-deps.ts`, `deps-report.ts`, `run-fork-tests.ts`, `sync-cleanup.sh`, `stage-overlay.mjs`. |
-| `dev/` | Docker dev container (`run.sh`): installs, builds and tests never run on the host. |
+| `dev/` | Docker dev container: `run.sh <command>` runs it with the checkout bind-mounted at `/work`. |
 | `../.github/workflows/fork-*.yml` | CI (guards, typecheck, tests) and Desktop packaging/release. |
 | `../.claude/skills/upstream-sync/` | The upstream sync procedure. |
+
+## Development (Docker only)
+Nothing from npm runs on the host. The git checkout lives on the host; every package manager, build and test
+command runs in the container, which writes `node_modules` and build output into the (git-ignored) checkout:
+
+```bash
+plugins/dev/run.sh pnpm install --frozen-lockfile --ignore-scripts
+plugins/dev/run.sh node --import tsx/esm plugins/scripts/guard-telemetry.ts
+plugins/dev/run.sh node --import tsx/esm plugins/scripts/run-fork-tests.ts
+plugins/dev/run.sh pnpm run typecheck
+```
+Host side: only git, gh and docker. Do not install git hooks (lefthook) from `node_modules` on the host;
+`--ignore-scripts` keeps them out. Desktop installers are built only by `fork-desktop.yml`.
 
 ## Install (unsigned)
 - macOS: open the `.dmg`, drag nullcode to Applications, then right-click → Open the first time

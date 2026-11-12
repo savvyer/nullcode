@@ -36,6 +36,10 @@ jobs:
         run: node --import tsx/esm plugins/scripts/check-deps.ts
       - name: Telemetry guard (composition + sources)
         run: node --import tsx/esm plugins/scripts/guard-telemetry.ts
+      - name: Documentation gates touched by the fork (budgets, bilingual pairing)
+        run: |
+          node --import tsx/esm scripts/verify-doc-budgets.ts
+          node --import tsx/esm scripts/verify-translation-pairing.ts
       - name: Typecheck
         run: pnpm run typecheck
       - name: Unit tests of patched packages (minus plugins/test-divergence.json)

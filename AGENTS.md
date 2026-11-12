@@ -187,3 +187,7 @@ Docs accompany every code change: update affected README and JSDoc contracts tog
 ## Vendoring policy
 
 `vendor/` packages are pinned source copies (manifest with upstream SHAs in [vendor/README.md](vendor/README.md)). Update via the sync procedure there; re-apply or retire the logged local modifications; rerun `pnpm run test && pnpm run build`.
+
+## nullcode fork
+
+This checkout is the nullcode fork. Never run pnpm, npm, project code, builds, or tests on the host: use `plugins/dev/run.sh <command>`, a Docker container with this checkout bind-mounted. Register every upstream-file edit in [plugins/PATCHES.md](plugins/PATCHES.md); merge upstream with [upstream-sync](.agents/skills/upstream-sync/SKILL.md).
