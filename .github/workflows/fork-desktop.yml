@@ -1,0 +1,105 @@
+name: nullcode Desktop
+
+# Unsigned Desktop installers for macOS arm64/x64 and Windows x64.
+# workflow_dispatch → build artifacts only; tag v* → also a GitHub Release
+# (Windows auto-updates from releases/latest/download/nightly.yml; macOS updates manually).
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DSH_TELEMETRY_DISABLED: '1'
+
+jobs:
+  package:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: mac-arm64, runner: macos-14, script: 'package:desktop:mac:arm64:unsigned' }
+          - { target: mac-x64, runner: macos-14, script: 'package:desktop:mac:x64:unsigned' }
+          - { target: win-x64, runner: windows-latest, script: 'package:desktop:win:x64:unsigned' }
+    name: package ${{ matrix.target }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 150
+    defaults:
+      run:
+        shell: bash
+    env:
+      DSH_DESKTOP_PACKAGE_CACHE_DIR: ${{ runner.temp }}/dsh-desktop-package-cache
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Resolve build version
+        id: version
+        # <product>.<date>.<run>.<attempt>, the run form desktop-build-version.mjs accepts; monotonic across runs.
+        run: |
+          node --input-type=module -e "
+            import { desktopBuildVersionPrefix } from './apps/desktop/scripts/desktop-build-version.mjs'
+            import { readFileSync, appendFileSync } from 'node:fs'
+            const product = JSON.parse(readFileSync('apps/desktop/package.json', 'utf8')).version
+            const date = new Date().toISOString().slice(0, 10).replaceAll('-', '')
+            const version = desktopBuildVersionPrefix(product) + date + '.' + process.env.GITHUB_RUN_NUMBER + '.' + process.env.GITHUB_RUN_ATTEMPT
+            console.log('build version', version)
+            appendFileSync(process.env.GITHUB_OUTPUT, 'version=' + version + '\n')
+          "
+      - name: Package ${{ matrix.target }} (unsigned)
+        run: pnpm run ${{ matrix.script }} --build-version "${{ steps.version.outputs.version }}"
+      - name: Telemetry guard (packaged)
+        run: node --import tsx/esm plugins/scripts/guard-telemetry.ts --packaged "apps/desktop/.desktop-build/targets/${{ matrix.target }}/unsigned-artifacts"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: nullcode-${{ matrix.target }}
+          path: |
+            apps/desktop/.desktop-build/targets/${{ matrix.target }}/unsigned-artifacts/*.dmg
+            apps/desktop/.desktop-build/targets/${{ matrix.target }}/unsigned-artifacts/*.exe
+            apps/desktop/.desktop-build/targets/${{ matrix.target }}/unsigned-artifacts/*.blockmap
+            apps/desktop/.desktop-build/targets/${{ matrix.target }}/unsigned-artifacts/nightly*.yml
+          if-no-files-found: error
+          retention-days: 14
+      - name: Retain packaging diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: nullcode-${{ matrix.target }}-logs
+          include-hidden-files: true
+          path: apps/desktop/.desktop-build/packaging-runs/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: nullcode-*
+          path: dist
+          merge-multiple: true
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          ls -la dist
+          gh release create "$TAG" dist/* --repo "$GITHUB_REPOSITORY" --title "nullcode $TAG" \
+            --notes "Unsigned builds. macOS: right-click → Open on first launch (or xattr -dr com.apple.quarantine). Windows: SmartScreen → More info → Run anyway."

@@ -1,0 +1,41 @@
+name: nullcode CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # CI never reports to any telemetry endpoint.
+  DSH_TELEMETRY_DISABLED: '1'
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Dependency allowlist
+        run: node --import tsx/esm plugins/scripts/check-deps.ts
+      - name: Telemetry guard (composition + sources)
+        run: node --import tsx/esm plugins/scripts/guard-telemetry.ts
+      - name: Typecheck
+        run: pnpm run typecheck
+      - name: Unit tests of patched packages (minus plugins/test-divergence.json)
+        run: node --import tsx/esm plugins/scripts/run-fork-tests.ts

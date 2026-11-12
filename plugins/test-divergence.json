@@ -1,0 +1,124 @@
+{
+  "comment": "Upstream tests that assert behavior nullcode changes on purpose (plugins/PATCHES.md). Upstream test files stay untouched to avoid sync conflicts; plugins/scripts/run-fork-tests.ts skips exactly these. Review on every sync: an entry whose test now passes or no longer exists should be removed.",
+  "paths": [
+    "apps/desktop",
+    "apps/desktop-host",
+    "packages/llm/llm-deepseek",
+    "scripts/optional-bundles.spec.ts",
+    "scripts/release/families.spec.ts"
+  ],
+  "excludeTests": [
+    {
+      "title": "fetches the platform-declared CUA provider tarballs with an empty cache for every target",
+      "reason": "P8: the CUA bundle is not shipped"
+    },
+    {
+      "title": "runs the local preflight before dependency installation in both self-hosted jobs",
+      "reason": "P0: reads deleted upstream desktop publish workflows"
+    },
+    {
+      "title": "keeps rollout approval and website recovery separate without tag creation or full package verification",
+      "reason": "P0: reads deleted .github/workflows/desktop-rollout.yml"
+    },
+    {
+      "title": "executes the master guard and keeps all rollout preflights ahead of dependency installation",
+      "reason": "P0: reads deleted .github/workflows/desktop-rollout.yml"
+    },
+    {
+      "title": "accepts a stable prerelease in an unsigned Windows x64 configuration",
+      "reason": "P7: unsigned Windows now has the GitHub Releases feed"
+    },
+    {
+      "title": "selects macOS local defaults while excluding inherited release settings and retaining build networking",
+      "reason": "P6: app id dev.nullcode.app"
+    },
+    {
+      "title": "requires policy outside local macOS builds in",
+      "reason": "P4: unsigned builds never require a policy"
+    },
+    {
+      "title": "preserves installer metadata and dependency ownership on win32",
+      "reason": "P6: productName nullcode"
+    },
+    {
+      "title": "preserves installer metadata and dependency ownership on darwin",
+      "reason": "P6: productName nullcode"
+    },
+    {
+      "title": "names unsigned Windows artifacts so they cannot pass for release builds",
+      "reason": "P6: artifact prefix nullcode-"
+    },
+    {
+      "title": "loads release identifiers from the environment and requires code signing",
+      "reason": "P6: protocol name/scheme nullcode"
+    },
+    {
+      "title": "isolates unsigned Windows artifacts and omits updater metadata without release credentials",
+      "reason": "P6/P7: name and Windows feed"
+    },
+    {
+      "title": "builds local macOS arm64 DMGs without release credentials or update metadata",
+      "reason": "P6: names"
+    },
+    {
+      "title": "builds local macOS x64 DMGs without release credentials or update metadata",
+      "reason": "P6: names"
+    },
+    {
+      "title": "focuses DSH once when browser authorization becomes failed",
+      "reason": "P9: no account stream"
+    },
+    {
+      "title": "focuses DSH once when browser authorization becomes expired",
+      "reason": "P9: no account stream"
+    },
+    {
+      "title": "opens Platform authorization in the effective light palette",
+      "reason": "P9: no account stream / Platform login"
+    },
+    {
+      "title": "opens Platform authorization in the effective dark palette",
+      "reason": "P9: no account stream / Platform login"
+    },
+    {
+      "title": "starts welcome onboarding without carrying update focus into login or skip",
+      "reason": "P9: no welcome window"
+    },
+    {
+      "title": "shows the entry after logout only without a separately configured API key",
+      "reason": "P9: needsWelcome is always false"
+    },
+    {
+      "title": "supplies publisher metadata with explicit Windows target",
+      "reason": "P6: artifact prefix nullcode-"
+    },
+    {
+      "title": "uses the Messages endpoint, authentication, attribution and final usage",
+      "reason": "P3: no user/session id headers"
+    },
+    {
+      "title": "starts keyless and serves the next request once the key arrives",
+      "reason": "P3: no .anonymous-user-id is created any more"
+    },
+    {
+      "title": "applies a registered upload exclusion through HTTP with consumer first",
+      "reason": "P3: asserts x-deepseek-harness-session-id"
+    },
+    {
+      "title": "boots from cordis.yml and routes the next request after external settings and credential edits",
+      "reason": "P3: asserts the user-id header"
+    },
+    {
+      "title": "streams a text generation end to end through the assembler",
+      "reason": "P3: asserts the user-id header"
+    },
+    {
+      "title": "forwards the harness user and session ids for host-side trajectory routing",
+      "reason": "P3: the ids are removed"
+    },
+    {
+      "title": "resolves connection facts and the credential exactly once per stream call",
+      "reason": "P3: resolveUserId is no longer called"
+    }
+  ]
+}
