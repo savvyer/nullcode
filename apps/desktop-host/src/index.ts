@@ -1,6 +1,8 @@
 /** Launch the Desktop profile through the Web application and report its URL to Electron. */
 
 import { delimiter, join } from 'node:path'
+import { existsSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { randomUUID } from 'node:crypto'
 import type { PluginOperationRunId } from '@deepseek-ai/dsh-plugin-manager/diagnostic'
 import { formatFatalDiagnostic } from './fatal-diagnostic.ts'
@@ -16,6 +18,20 @@ import { installDesktopQuitInspection } from './quit-inspection.ts'
 import { installPlatformSessionPublisher } from './platform-session.ts'
 import { installOperationDiagnostics } from './operation-diagnostics.ts'
 
+/**
+ * nullcode (PATCHES.md P1): the fork's overlay layer, applied after bundles and user layers.
+ * Packaged builds carry it beside lib/index.js; source runs read it from plugins/overlay.
+ * A missing file is a startup error, never a silent skip.
+ * @returns absolute path of nullcode.patch.yml.
+ */
+function nullcodeOverlay(): string {
+  for (const candidate of [new URL('./nullcode.patch.yml', import.meta.url), new URL('../../../plugins/overlay/nullcode.patch.yml', import.meta.url)]) {
+    const path = fileURLToPath(candidate)
+    if (existsSync(path)) return path
+  }
+  throw new Error('nullcode: overlay nullcode.patch.yml is missing from the desktop host')
+}
+
 async function main(): Promise<void> {
   const runId = randomUUID() as PluginOperationRunId
   if (process.connected) process.send?.({ type: 'starting', runId }, (error) => { if (error !== null) console.error(error) })
@@ -24,13 +40,15 @@ async function main(): Promise<void> {
   // Set before the launch-environment snapshot and profile evaluation; empty means the payload sits beside the runtime directory.
   process.env.DSH_PRIMARY_RUNTIME = process.argv[4] || join(runtimeDir, '..', 'runtime', 'primary-runtime')
   const installAnchor = join(runtimeDir, 'node_modules', '@deepseek-ai', 'dsh', 'package.json')
+  // nullcode: belt and braces beside the overlay; any non-empty value hard-disables the telemetry row.
+  process.env.DSH_TELEMETRY_DISABLED ||= '1'
   const profile = loadProfileDirectory('dsh', projectDir, installAnchor)
   reportSkippedBundles('dsh', profile)
   const application = runProfile({
     environment: loadLayeredEnv('dsh'),
     profile: 'desktop',
     resolvedProfile: { profile, installAnchor },
-    patchFiles: [],
+    patchFiles: [nullcodeOverlay()],
     args: ['--no-open', '--host', '127.0.0.1', '--port', '0'],
     ...(process.argv[5] === undefined ? {} : {
       packageManager: {

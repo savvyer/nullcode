@@ -1,0 +1,58 @@
+# nullcode overlay — applied AFTER the bundle patches and the user's layers
+# (desktop: apps/desktop-host passes it as patchFiles; web/CLI from sources:
+# `pnpm dsh --profile web --patch plugins/overlay/nullcode.patch.yml`).
+#
+# Every row below must exist in the composition: plugins/scripts/guard-telemetry.ts
+# fails CI when upstream renames or removes one, so a disable can never silently
+# stop applying. A malformed file is a startup error (fail-closed).
+#
+# A patch replaces a row's whole `config`, so rows with `config` restate it fully.
+
+# ── telemetry / analytics ────────────────────────────────────────────────────
+# OTel pipeline (base). session-telemetry-otel exports Session-log prefixes to
+# dsh-otel-collector.deepseeksvc.com after feedback.
+- id: otel
+  disabled: true
+- id: session-telemetry-otel
+  disabled: true
+
+# Desktop product telemetry + analytics (web-app; desktop profile only).
+- id: desktop-product-telemetry
+  disabled: true
+- id: product-analytics
+  disabled: true
+
+# ── feedback (only meaningful with the telemetry upload above) ──────────────
+- id: command-feedback
+  disabled: true
+- id: message-feedback
+  disabled: true
+- id: ui-message-feedback
+  disabled: true
+
+# ── request-body side channels on DeepSeek API calls ────────────────────────
+# session-log-deepseek attaches the session event log (`dsh_session_log`, up to
+# 8 MiB chunks) and plugin-package-inventory-deepseek the active plugin list
+# (`dsh_plugin_packages`) to every llm-deepseek request; the extensions registry
+# only serves them. llm-deepseek reads it through optional ctx.get().
+- id: session-log-deepseek
+  disabled: true
+- id: plugin-package-inventory-deepseek
+  disabled: true
+- id: deepseek-llm-api-extensions
+  disabled: true
+
+# ── DeepSeek account / Platform login (DeepSeek stays available by API key) ──
+- id: deepseek-account
+  disabled: true
+- id: llm-deepseek-account
+  disabled: true
+- id: ui-settings-account
+  disabled: true
+- id: ui-account-notifications
+  disabled: true
+
+# ── no npm registry probe from the Plugins page ─────────────────────────────
+- id: ui-plugin-manager
+  config:
+    registryProbeEnabled: false
