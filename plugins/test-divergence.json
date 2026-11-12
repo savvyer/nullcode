@@ -33,7 +33,7 @@
       "reason": "P6: app id dev.nullcode.app"
     },
     {
-      "title": "requires policy outside local macOS builds in",
+      "title": "requires policy outside local macOS builds in {\"unsigned\":true}",
       "reason": "P4: unsigned builds never require a policy"
     },
     {

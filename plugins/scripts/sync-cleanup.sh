@@ -7,7 +7,7 @@ cd "$(git rev-parse --show-toplevel)"
 removed=0
 keep_out() {
   case "$1" in
-    .github/workflows/fork-*) [ "$2" = conflict ] && { git checkout --ours -- "$1"; git add -- "$1"; echo "sync-cleanup: kept ours $1"; } ;;
+    .github/workflows/fork-*) if [ "$2" = conflict ]; then git checkout --ours -- "$1"; git add -- "$1"; echo "sync-cleanup: kept ours $1"; fi ;;
     .github/workflows/*|.github/dependabot.yml) git rm -q -f --ignore-unmatch -- "$1"; removed=$((removed + 1)); echo "sync-cleanup: removed upstream $1" ;;
   esac
 }

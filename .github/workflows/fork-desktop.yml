@@ -25,8 +25,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { target: mac-arm64, runner: macos-14, script: 'package:desktop:mac:arm64:unsigned' }
-          - { target: mac-x64, runner: macos-14, script: 'package:desktop:mac:x64:unsigned' }
+          - { target: mac-arm64, runner: macos-latest, script: 'package:desktop:mac:arm64:unsigned' }
+          - { target: mac-x64, runner: macos-latest, script: 'package:desktop:mac:x64:unsigned' }
           - { target: win-x64, runner: windows-latest, script: 'package:desktop:win:x64:unsigned' }
     name: package ${{ matrix.target }}
     runs-on: ${{ matrix.runner }}
@@ -104,6 +104,15 @@ jobs:
           pattern: nullcode-*
           path: dist
           merge-multiple: true
+      - name: Verify the Windows update feed matches its installer
+        # electron-updater trusts nightly.yml's sha512 (unsigned builds have no publisher check), so a mismatched pair never ships.
+        run: |
+          feed=dist/nightly.yml
+          installer=$(sed -n 's/^path: //p' "$feed")
+          expected=$(sed -n 's/^sha512: //p' "$feed")
+          actual=$(openssl dgst -sha512 -binary "dist/$installer" | base64 -w0)
+          echo "feed $installer"
+          [ -n "$installer" ] && [ "$expected" = "$actual" ] || { echo "::error::nightly.yml sha512 does not match $installer"; exit 1; }
       - name: Publish GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}

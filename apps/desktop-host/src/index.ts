@@ -25,10 +25,11 @@ import { installOperationDiagnostics } from './operation-diagnostics.ts'
  * @returns absolute path of nullcode.patch.yml.
  */
 function nullcodeOverlay(): string {
-  for (const candidate of [new URL('./nullcode.patch.yml', import.meta.url), new URL('../../../plugins/overlay/nullcode.patch.yml', import.meta.url)]) {
-    const path = fileURLToPath(candidate)
-    if (existsSync(path)) return path
-  }
+  const packaged = fileURLToPath(new URL('./nullcode.patch.yml', import.meta.url))
+  if (existsSync(packaged)) return packaged
+  // The repository fallback only applies to a workspace checkout, never to an installed runtime.
+  const source = fileURLToPath(new URL('../../../plugins/overlay/nullcode.patch.yml', import.meta.url))
+  if (!/[\\/]node_modules[\\/]/u.test(fileURLToPath(import.meta.url)) && existsSync(source)) return source
   throw new Error('nullcode: overlay nullcode.patch.yml is missing from the desktop host')
 }
 

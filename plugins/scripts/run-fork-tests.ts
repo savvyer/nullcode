@@ -16,5 +16,7 @@ const args = ['exec', 'vitest', 'run', ...list.paths,
   // Hosted runners are much slower than upstream's 16-core pools; a 5 s default times out filesystem-heavy specs.
   '--testNamePattern', pattern, '--testTimeout', '30000', ...process.argv.slice(2)]
 console.log(`run-fork-tests: ${list.excludeTests.length} upstream tests skipped (plugins/test-divergence.json)`)
-const result = spawnSync('pnpm', args, { cwd: ROOT, stdio: 'inherit', shell: process.platform === 'win32' })
+// Through pnpm: packaging specs build native/system on demand via npm_execpath. Linux/macOS only (Docker, CI):
+// the regex pattern would not survive a Windows shell.
+const result = spawnSync('pnpm', args, { cwd: ROOT, stdio: 'inherit' })
 process.exit(result.status ?? 1)
