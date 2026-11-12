@@ -19,7 +19,7 @@ history and merges `upstream/master` regularly. Differences:
 | `UPSTREAM.md` | Sync log (upstream SHA → date → result). |
 | `DEPS.md`, `deps-allowlist.json` | Dependency report and frozen lockfile allowlist. |
 | `test-divergence.json` | Upstream tests that assert behaviour nullcode changes on purpose. |
-| `scripts/` | `guard-telemetry.ts`, `check-deps.ts`, `deps-report.ts`, `run-fork-tests.ts`, `sync-cleanup.sh`, `stage-overlay.mjs`. |
+| `scripts/` | `guard-telemetry.ts`, `check-deps.ts`, `deps-report.ts`, `run-fork-tests.ts`, `sync-cleanup.sh`, `stage-overlay.mjs`, `release-tag.sh`, `check-release-tag.mjs`. |
 | `dev/` | Docker dev container: `run.sh <command>` runs it with the checkout bind-mounted at `/work`. |
 | `../.github/workflows/fork-*.yml` | CI (guards, typecheck, tests) and Desktop packaging/release. |
 | `../.claude/skills/upstream-sync/` | The upstream sync procedure. |
@@ -44,5 +44,12 @@ Host side: only git, gh and docker. Do not install git hooks (lefthook) from `no
 - Windows: run the installer; SmartScreen → More info → Run anyway.
 
 ## Release
-Push a tag `v*` (e.g. `v0.2.2-rc.2.1`) → `fork-desktop.yml` builds all targets and publishes the Release.
+Tags are `v<upstream product version>-<YYYY.MM.DD>-<n>`, e.g. `v0.2.2-rc.2-2026.11.12-1`: the version is
+`apps/desktop/package.json` of the tagged commit, `<n>` counts that day's releases of that version.
+
+```bash
+plugins/scripts/release-tag.sh --push   # host-safe (git only): creates the next tag and starts fork-desktop.yml
+```
+`fork-desktop.yml` rejects other tag formats before building (`check-release-tag.mjs`). The installed app's own
+version is `<product version>.<YYYYMMDD>.<run>.<attempt>`, which Windows auto-update compares.
 `workflow_dispatch` builds artifacts only.

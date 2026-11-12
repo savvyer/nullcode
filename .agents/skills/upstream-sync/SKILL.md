@@ -53,4 +53,4 @@ A new suspicious enabled row: decide (disable in overlay / keep and document) â€
 ## 5. Finish
 - Add a row to `plugins/UPSTREAM.md` (date, upstream SHA, result).
 - Commit on the sync branch, push it, open a PR to `main`, and report: new / suspicious / needs a decision.
-- Merging into `main` is the human's call. A desktop build is `fork-desktop.yml` (dispatch); a release is a `v*` tag.
+- Merging into `main` is the human's call. A desktop build is `fork-desktop.yml` (dispatch); a release is a `v<version>-<YYYY.MM.DD>-<n>` tag from `plugins/scripts/release-tag.sh --push`.

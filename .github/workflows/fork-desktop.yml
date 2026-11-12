@@ -1,7 +1,7 @@
 name: nullcode Desktop
 
 # Unsigned Desktop installers for macOS Apple Silicon (arm64) and Windows x64.
-# workflow_dispatch → build artifacts only; tag v* → also a GitHub Release
+# workflow_dispatch → build artifacts only; tag v<version>-<YYYY.MM.DD>-<n> → also a GitHub Release
 # (Windows auto-updates from releases/latest/download/nightly.yml; macOS updates manually).
 
 on:
@@ -41,6 +41,11 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Release tag is v<product version>-<YYYY.MM.DD>-<n>
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          TAG: ${{ github.ref_name }}
+        run: node plugins/scripts/check-release-tag.mjs "$TAG"
       - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5.0.0
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
