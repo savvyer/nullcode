@@ -28,7 +28,7 @@ const AMBIENT_RELEASE_SETTING = /^(?:DSH_DESKTOP_(?:APP_ID|AUTO_UPDATE_ENV|MANDA
 export function localMacOSPackageEnvironment(environment = process.env) {
   return {
     ...Object.fromEntries(Object.entries(environment).filter(([name]) => !AMBIENT_RELEASE_SETTING.test(name))),
-    DSH_DESKTOP_APP_ID: 'com.deepseek.harness',
+    DSH_DESKTOP_APP_ID: 'dev.nullcode.app', // nullcode (PATCHES.md P6)
     DSH_DESKTOP_UNSIGNED: '1',
   }
 }
@@ -121,7 +121,7 @@ export function validateDesktopPackageEnvironment(environment, target, options =
   resolveDesktopTargetBuildPaths(environment, target.platform, target.arch)
   resolveDesktopAppId(environment)
   resolveNpmRegistry(environment)
-  if (target.platform !== 'darwin' || !options.unsigned) resolveDesktopPolicyEnvironment(environment)
+  if (!options.unsigned) resolveDesktopPolicyEnvironment(environment) // nullcode (PATCHES.md P4)
   if (target.platform === 'darwin') resolveMacOSPackageSettings(environment)
   else resolveWindowsPackageSettings(environment)
   if (options.unsigned) return

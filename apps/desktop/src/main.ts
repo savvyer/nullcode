@@ -50,6 +50,9 @@ import { OperationJournal } from './operation-journal.ts'
 import { runOperationReportJob, type OperationReportJobResult } from './operation-report-job.ts'
 import { openWelcomeWindow } from './welcome-window.ts'
 import { WELCOME_IPC, needsWelcome, type WelcomeNotice } from './welcome-api.ts'
+
+/** nullcode (PATCHES.md P9): the DeepSeek account and Platform login are not part of this fork. */
+const NULLCODE_ACCOUNT_DISABLED: boolean = true
 import { connectDesktopWelcome, type DesktopWelcomeBackend } from './welcome-backend.ts'
 import { DesktopUpdateJournal } from './update-journal.ts'
 import { DesktopUpdatePreparationError } from './update-error.ts'
@@ -557,7 +560,8 @@ async function main(): Promise<void> {
         if (!reportedLaunch) { reportedLaunch = true; void track('desktop_app_launch', {}) }
         stopAccount?.()
         const accountBackend = welcomeBackend.account
-        stopAccount = accountBackend.watch((state) => {
+        // nullcode (PATCHES.md P9): no account stream; the account row is disabled and the watch would reconnect forever.
+        stopAccount = NULLCODE_ACCOUNT_DISABLED ? undefined : accountBackend.watch((state) => {
           if (quitting) return
           if (welcomeWindow !== undefined && !welcomeWindow.isDestroyed()) welcomeWindow.webContents.send(WELCOME_IPC.state, state)
           const attempt = state.attempt
@@ -1485,10 +1489,10 @@ async function main(): Promise<void> {
     window.focus()
   }
 
-  if (app.isPackaged || process.env.DSH_DESKTOP_DEV_APP === '1') app.setAsDefaultProtocolClient('dsh')
+  if (app.isPackaged || process.env.DSH_DESKTOP_DEV_APP === '1') app.setAsDefaultProtocolClient('nullcode') // nullcode (PATCHES.md P6)
   app.on('open-url', (event, url) => {
     event.preventDefault()
-    if (url === 'dsh://open' || url === 'dsh://open/') focusPrimaryWindow()
+    if (url === 'nullcode://open' || url === 'nullcode://open/') focusPrimaryWindow()
   })
 
   app.on('activate', (_event, hasVisibleWindows) => {

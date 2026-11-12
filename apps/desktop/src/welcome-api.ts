@@ -70,6 +70,8 @@ export interface WelcomeAuthentication {
  * @param authentication - current account and independently stored API-key facts.
  * @returns true only when neither authentication route is configured.
  */
-export function needsWelcome(authentication: WelcomeAuthentication): boolean {
-  return !authentication.loggedIn && !authentication.hasApiKey
+export function needsWelcome(_authentication: WelcomeAuthentication): boolean {
+  // nullcode (PATCHES.md P9): the DeepSeek account is not mounted; the workspace opens directly and
+  // providers (OpenCode Go, DeepSeek API key, ...) are configured in Settings -> Models.
+  return false
 }

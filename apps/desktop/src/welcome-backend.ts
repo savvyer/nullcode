@@ -122,7 +122,8 @@ export function connectDesktopWelcome(
     }
     if (ref !== undefined && !record(states[ref])) throw new Error('desktop welcome: missing credential metadata')
     return {
-      loggedIn: (await account.state()).status === 'credential-stored',
+      // nullcode (PATCHES.md P9): the account remote is absent when deepseek-account is disabled.
+      loggedIn: await account.state().then(state => state.status === 'credential-stored', () => false),
       hasApiKey: Object.values(states).some(value => record(value) && value.configured === true),
       writable: ref !== undefined && record(states[ref]) && states[ref].writable === true,
       localePreference: localePreference(namespaces),
