@@ -9,10 +9,9 @@ export const ALLOWLIST = join(ROOT, 'plugins', 'deps-allowlist.json')
 type Deps = Record<string, string | { specifier: string, version: string }>
 interface Importer { dependencies?: Deps, devDependencies?: Deps, optionalDependencies?: Deps }
 interface Snapshot { dependencies?: Record<string, string>, optionalDependencies?: Record<string, string> }
-interface Package { resolution?: unknown, requiresBuild?: boolean, hasBin?: boolean }
 export interface Lockfile {
   importers: Record<string, Importer>
-  packages: Record<string, Package>
+  packages: Record<string, unknown>
   snapshots: Record<string, Snapshot>
 }
 
@@ -22,7 +21,7 @@ export function readLockfile(path = join(ROOT, 'pnpm-lock.yaml')): Lockfile {
 }
 
 /** `@scope/name@1.2.3(peer@x)` → `@scope/name@1.2.3`. */
-export const packageKey = (snapshotKey: string): string => snapshotKey.replace(/\(.*$/u, '')
+const packageKey = (snapshotKey: string): string => snapshotKey.replace(/\(.*$/u, '')
 export const packageName = (key: string): string => key.slice(0, key.lastIndexOf('@'))
 
 /** Every external package@version in the lockfile, sorted. */
@@ -31,9 +30,11 @@ export const externalPackages = (lock: Lockfile): string[] => Object.keys(lock.p
 const version = (value: string | { version: string }): string => typeof value === 'string' ? value : value.version
 const external = (value: string): boolean => !value.startsWith('link:') && !value.startsWith('file:') && !value.startsWith('workspace:')
 
+export interface DirectDependency { importer: string, name: string, version: string, kind: 'runtime' | 'dev' | 'optional' }
+
 /** Direct external dependencies per workspace importer. */
-export function directDependencies(lock: Lockfile): { importer: string, name: string, version: string, kind: 'runtime' | 'dev' | 'optional' }[] {
-  const out: { importer: string, name: string, version: string, kind: 'runtime' | 'dev' | 'optional' }[] = []
+export function directDependencies(lock: Lockfile): DirectDependency[] {
+  const out: DirectDependency[] = []
   for (const [importer, deps] of Object.entries(lock.importers)) {
     for (const [kind, field] of [['runtime', 'dependencies'], ['dev', 'devDependencies'], ['optional', 'optionalDependencies']] as const) {
       for (const [name, value] of Object.entries(deps[field] ?? {})) {
@@ -54,8 +55,8 @@ export function dependents(lock: Lockfile): Map<string, Set<string>> {
     set.add(parent)
   }
   for (const [key, snapshot] of Object.entries(lock.snapshots)) {
-    for (const [name, value] of Object.entries({ ...snapshot.dependencies, ...snapshot.optionalDependencies })) {
-      if (external(value)) add(`${name}@${packageKey(value)}`, packageKey(key))
+    for (const deps of [snapshot.dependencies, snapshot.optionalDependencies]) {
+      for (const [name, value] of Object.entries(deps ?? {})) if (external(value)) add(`${name}@${packageKey(value)}`, packageKey(key))
     }
   }
   for (const dep of directDependencies(lock)) add(`${dep.name}@${dep.version}`, `workspace:${dep.importer}`)

@@ -4,16 +4,17 @@
  */
 import { spawnSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
+import { ROOT } from './lockfile.ts'
 
-const ROOT = resolve(import.meta.dirname, '..', '..')
 const list = JSON.parse(readFileSync(join(ROOT, 'plugins', 'test-divergence.json'), 'utf8')) as {
   paths: string[], excludeTests: { title: string }[]
 }
 const escape = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&')
 const pattern = `^(?!.*(?:${list.excludeTests.map(test => escape(test.title)).join('|')}))`
 const args = ['exec', 'vitest', 'run', ...list.paths,
-  '--testNamePattern', pattern, ...process.argv.slice(2)]
+  // Hosted runners are much slower than upstream's 16-core pools; a 5 s default times out filesystem-heavy specs.
+  '--testNamePattern', pattern, '--testTimeout', '30000', ...process.argv.slice(2)]
 console.log(`run-fork-tests: ${list.excludeTests.length} upstream tests skipped (plugins/test-divergence.json)`)
 const result = spawnSync('pnpm', args, { cwd: ROOT, stdio: 'inherit', shell: process.platform === 'win32' })
 process.exit(result.status ?? 1)

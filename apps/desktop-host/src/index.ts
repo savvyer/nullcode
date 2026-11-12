@@ -40,8 +40,6 @@ async function main(): Promise<void> {
   // Set before the launch-environment snapshot and profile evaluation; empty means the payload sits beside the runtime directory.
   process.env.DSH_PRIMARY_RUNTIME = process.argv[4] || join(runtimeDir, '..', 'runtime', 'primary-runtime')
   const installAnchor = join(runtimeDir, 'node_modules', '@deepseek-ai', 'dsh', 'package.json')
-  // nullcode: belt and braces beside the overlay; any non-empty value hard-disables the telemetry row.
-  process.env.DSH_TELEMETRY_DISABLED ||= '1'
   const profile = loadProfileDirectory('dsh', projectDir, installAnchor)
   reportSkippedBundles('dsh', profile)
   const application = runProfile({

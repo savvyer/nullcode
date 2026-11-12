@@ -2,7 +2,7 @@ import type { ProductEvent } from '@deepseek-ai/dsh-client-product-analytics/typ
 /** Native welcome operations using the shared Web authentication and RPC APIs. */
 
 import { randomUUID } from 'node:crypto'
-import { desktopAccountBackend, type DesktopAccountBackend } from './account-backend.ts'
+import type { DesktopAccountBackend } from './account-backend.ts'
 
 /** Metadata needed before the native entry or workspace becomes visible. */
 export interface WelcomeState {
@@ -68,7 +68,14 @@ export function connectDesktopWelcome(
     }
     return envelope.result.value
   }
-  const account = desktopAccountBackend(origin, invoke, cookie)
+  // nullcode (PATCHES.md P9): deepseek-account is disabled by the overlay, so the shell keeps an inert,
+  // signed-out account: no account RPCs, no account stream, sign-in rejects.
+  const signedOut = { status: 'signed-out', attempt: null, links: { usageUrl: origin, topUpUrl: origin } } as const
+  const disabled = (): Promise<never> => Promise.reject(new Error('nullcode: the DeepSeek account is disabled'))
+  const account: DesktopAccountBackend = {
+    state: () => Promise.resolve(signedOut), start: disabled, cancel: disabled, signOut: () => Promise.resolve(signedOut),
+    watch: () => () => {},
+  }
   const settingsAndReference = async () => {
     const settings = await invoke({ namespace: 'settings', method: 'describe', args: {} })
     if (!record(settings) || !Array.isArray(settings.namespaces)) throw new Error('desktop welcome: missing settings namespaces')
@@ -122,8 +129,7 @@ export function connectDesktopWelcome(
     }
     if (ref !== undefined && !record(states[ref])) throw new Error('desktop welcome: missing credential metadata')
     return {
-      // nullcode (PATCHES.md P9): the account remote is absent when deepseek-account is disabled.
-      loggedIn: await account.state().then(state => state.status === 'credential-stored', () => false),
+      loggedIn: (await account.state()).status === 'credential-stored',
       hasApiKey: Object.values(states).some(value => record(value) && value.configured === true),
       writable: ref !== undefined && record(states[ref]) && states[ref].writable === true,
       localePreference: localePreference(namespaces),

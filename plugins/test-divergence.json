@@ -65,22 +65,6 @@
       "reason": "P6: names"
     },
     {
-      "title": "focuses DSH once when browser authorization becomes failed",
-      "reason": "P9: no account stream"
-    },
-    {
-      "title": "focuses DSH once when browser authorization becomes expired",
-      "reason": "P9: no account stream"
-    },
-    {
-      "title": "opens Platform authorization in the effective light palette",
-      "reason": "P9: no account stream / Platform login"
-    },
-    {
-      "title": "opens Platform authorization in the effective dark palette",
-      "reason": "P9: no account stream / Platform login"
-    },
-    {
       "title": "starts welcome onboarding without carrying update focus into login or skip",
       "reason": "P9: no welcome window"
     },

@@ -17,7 +17,10 @@ for (const [child, parents] of reverse) for (const parent of parents) {
   if (set === undefined) forward.set(parent, set = new Set())
   set.add(child)
 }
+const closures = new Map<string, Set<string>>()
 const closure = (start: string): Set<string> => {
+  const cached = closures.get(start)
+  if (cached !== undefined) return cached
   const seen = new Set<string>()
   const stack = [...forward.get(start) ?? []]
   while (stack.length > 0) {
@@ -26,6 +29,7 @@ const closure = (start: string): Set<string> => {
     seen.add(key)
     stack.push(...forward.get(key) ?? [])
   }
+  closures.set(start, seen)
   return seen
 }
 
@@ -41,9 +45,7 @@ const runtime = [...uniqueDirect].filter(([, value]) => value.kinds.has('runtime
 const heavy = [...uniqueDirect.keys()].map(key => ({ key, size: closure(key).size })).sort((a, b) => b.size - a.size).slice(0, 40)
 const workspace = yaml.load(readFileSync(join(ROOT, 'pnpm-workspace.yaml'), 'utf8')) as { allowBuilds?: Record<string, boolean> }
 const builds = Object.entries(workspace.allowBuilds ?? {}).map(([name, allowed]) => `${name} (${allowed ? 'allowed' : 'denied'})`)
-const groups = [
-  ['browser-use / computer-use / cua', /browser-use|computer-use|cua|stagehand|puppeteer|playwright|chrome-devtools/u],
-] as const
+const AUTOMATION = /browser-use|computer-use|cua|stagehand|puppeteer|playwright|chrome-devtools/u
 
 const lines = [
   '# nullcode — dependency report',
@@ -56,10 +58,11 @@ const lines = [
   '',
   '## Reduction candidates',
   '',
-  ...groups.flatMap(([title, pattern]) => {
-    const hits = [...uniqueDirect].filter(([key]) => pattern.test(key))
-    return [`### ${title}`, '', ...hits.map(([key, value]) => `- \`${key}\` — ${closure(key).size} transitive; used by ${[...value.importers].join(', ')}`), '']
-  }),
+  '### browser-use / computer-use / cua',
+  '',
+  ...[...uniqueDirect].filter(([key]) => AUTOMATION.test(key))
+    .map(([key, value]) => `- \`${key}\` — ${closure(key).size} transitive; used by ${[...value.importers].join(', ')}`),
+  '',
   '## Heaviest direct dependencies (transitive closure size)',
   '',
   '| package | transitive | kind | used by |',

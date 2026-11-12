@@ -103,7 +103,7 @@ export function createElectronBuilderConfig(
   // nullcode (PATCHES.md P7): unsigned Windows updates from the fork's GitHub Releases (generic feed, nightly.yml);
   // macOS has no feed because Squirrel.Mac requires a signature.
   const update = unsigned
-    ? (resolvedPlatform === 'win32' ? { channel: 'nightly', publicUrl: env.NULLCODE_UPDATE_URL ?? 'https://github.com/savvyer/nullcode/releases/latest/download' } : undefined)
+    ? (resolvedPlatform === 'win32' ? { channel: 'nightly', publicUrl: 'https://github.com/savvyer/nullcode/releases/latest/download' } : undefined)
     : resolveDesktopAutoUpdateConfig(env, resolvedPlatform, resolvedArch)
   if (preparedRuntime !== undefined) buildPaths.dsh = preparedRuntime
   // electron-builder merges extraMetadata into the packaged manifest, so a build version here reaches

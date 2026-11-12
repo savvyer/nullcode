@@ -34,6 +34,8 @@ jobs:
     defaults:
       run:
         shell: bash
+    env:
+      OUT: apps/desktop/.desktop-build/targets/${{ matrix.target }}/unsigned-artifacts
     steps:
       - name: Package cache in runner temp (absolute path)
         run: echo "DSH_DESKTOP_PACKAGE_CACHE_DIR=${{ runner.temp }}/dsh-desktop-package-cache" >> "$GITHUB_ENV"
@@ -44,6 +46,7 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '24'
+          cache: pnpm
       - name: Install locked dependencies
         run: pnpm install --frozen-lockfile
       - name: Resolve build version
@@ -59,18 +62,24 @@ jobs:
             console.log('build version', version)
             appendFileSync(process.env.GITHUB_OUTPUT, 'version=' + version + '\n')
           "
+      # Windows packaging runs in PowerShell like upstream: Git Bash's GNU tar reads `D:\...` archive paths as host:file.
       - name: Package ${{ matrix.target }} (unsigned)
+        if: runner.os != 'Windows'
+        run: pnpm run ${{ matrix.script }} --build-version "${{ steps.version.outputs.version }}"
+      - name: Package ${{ matrix.target }} (unsigned, PowerShell)
+        if: runner.os == 'Windows'
+        shell: pwsh
         run: pnpm run ${{ matrix.script }} --build-version "${{ steps.version.outputs.version }}"
       - name: Telemetry guard (packaged)
-        run: node --import tsx/esm plugins/scripts/guard-telemetry.ts --packaged "apps/desktop/.desktop-build/targets/${{ matrix.target }}/unsigned-artifacts"
+        run: node --import tsx/esm plugins/scripts/guard-telemetry.ts --packaged "${{ env.OUT }}"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: nullcode-${{ matrix.target }}
           path: |
-            apps/desktop/.desktop-build/targets/${{ matrix.target }}/unsigned-artifacts/*.dmg
-            apps/desktop/.desktop-build/targets/${{ matrix.target }}/unsigned-artifacts/*.exe
-            apps/desktop/.desktop-build/targets/${{ matrix.target }}/unsigned-artifacts/*.blockmap
-            apps/desktop/.desktop-build/targets/${{ matrix.target }}/unsigned-artifacts/nightly*.yml
+            ${{ env.OUT }}/*.dmg
+            ${{ env.OUT }}/*.exe
+            ${{ env.OUT }}/*.blockmap
+            ${{ env.OUT }}/nightly*.yml
           if-no-files-found: error
           retention-days: 14
       - name: Retain packaging diagnostics
